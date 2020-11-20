@@ -12,25 +12,22 @@ func getMobilesFromContent(content string, atMobiles []string) ([]string, []stri
 	result := r.FindAllStringSubmatch(content, -1)
 	var parsedMobiles []string
 	var extendMobiles []string
-	if len(result) > 0 {
-		parsedMobiles = make([]string, len(result))
-		for _, atMobile := range atMobiles {
-			flag := true
-			for _,v := range result {
-				mobile := v[1]
-				if mobile == atMobile {
-					flag = false
-				}
-			}
-			if flag {
-				extendMobiles = append(extendMobiles, atMobile)
-			}
-		}
+	parsedMobiles = make([]string, len(result))
+	for _, atMobile := range atMobiles {
+		flag := true
 		for _,v := range result {
 			mobile := v[1]
-			parsedMobiles = append(parsedMobiles, mobile)
+			if mobile == atMobile {
+				flag = false
+			}
 		}
-
+		if flag {
+			extendMobiles = append(extendMobiles, atMobile)
+		}
+	}
+	for _,v := range result {
+		mobile := v[1]
+		parsedMobiles = append(parsedMobiles, mobile)
 	}
 	return parsedMobiles, extendMobiles
 }
