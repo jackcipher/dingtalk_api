@@ -5,12 +5,15 @@ import (
 	"github.com/jackcipher/dingtalk_api/structures"
 )
 
-func FormatMarkDownMessage(title, message string, isAtAll bool, atMobiles []string) *structures.MarkdownMessage {
+func FormatMarkDownMessage(title, message string, isAtAll bool, atMobiles []string, manualAt bool) *structures.MarkdownMessage {
 	atStr := ""
-	for _,v := range atMobiles {
-		atStr += fmt.Sprintf("@%s", v)
+	if !manualAt {
+		for _,v := range atMobiles {
+			atStr += fmt.Sprintf("@%s", v)
+		}
 	}
-	message = atStr + message
+	// 普通的at放到消息底部
+	message = fmt.Sprintf("%s\n\n***\n\n%s\n\n", message, atStr)
 	return &structures.MarkdownMessage{
 		Msgtype:  "markdown",
 		Markdown: structures.MarkdownRow{

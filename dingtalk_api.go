@@ -5,10 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jackcipher/dingtalk_api/utils"
 	"github.com/jackcipher/quickrequest"
-	"log"
+	"net/http"
 	"time"
 )
 
@@ -45,13 +46,28 @@ func (p *DingtalkConfig)reloadWebhook() {
 	webhook = fmt.Sprintf("https://oapi.dingtalk.com/robot/send?access_token=%s&timestamp=%d&sign=%s", p.Token, currentTimestamp, sign)
 }
 
-func (p *DingtalkConfig)SendMarkdown(title, message string, atMobiles []string, isAtAll bool) {
+func (p *DingtalkConfig)SendMarkdown(title, message string, atMobiles []string, isAtAll bool, manualAt bool) error {
 	var jsonByte []byte
 	var err error
 	p.reloadWebhook()
-	result := utils.FormatMarkDownMessage(title, message, isAtAll, atMobiles)
+	result := utils.FormatMarkDownMessage(title, message, isAtAll, atMobiles, manualAt)
 	if jsonByte,err = json.Marshal(result); err!=nil {
-		log.Fatalln(err)
+		return errors.New("消息格式化失败")
 	}
-	quickrequest.PostJson(webhook, jsonByte, map[string]string{})
+	rawResult,statusCode := quickrequest.PostJson(webhook, jsonByte, map[string]string{})
+	if statusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("网络错误，状态码:%d", statusCode))
+	}
+	type DingtalkResponse struct {
+		ErrCode int `json:"errcode"`
+		ErrMsg string `json:"errmsg"`
+	}
+	var response = &DingtalkResponse{}
+	if err := json.Unmarshal(rawResult, response); err!=nil {
+		return errors.New("JSON解析失败")
+	}
+	if response.ErrCode != 0 {
+		return errors.New(fmt.Sprintf("消息推送失败, 钉钉API返回:%s", response.ErrMsg))
+	}
+	return nil
 }
