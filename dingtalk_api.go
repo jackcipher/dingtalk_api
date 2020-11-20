@@ -46,11 +46,11 @@ func (p *DingtalkConfig)reloadWebhook() {
 	webhook = fmt.Sprintf("https://oapi.dingtalk.com/robot/send?access_token=%s&timestamp=%d&sign=%s", p.Token, currentTimestamp, sign)
 }
 
-func (p *DingtalkConfig)SendMarkdown(title, message string, atMobiles []string, isAtAll bool, manualAt bool) error {
+func (p *DingtalkConfig)SendMarkdown(title, message string, atMobiles []string, isAtAll bool) error {
 	var jsonByte []byte
 	var err error
 	p.reloadWebhook()
-	result := utils.FormatMarkDownMessage(title, message, isAtAll, atMobiles, manualAt)
+	result := utils.FormatMarkDownMessage(title, message, isAtAll, atMobiles)
 	if jsonByte,err = json.Marshal(result); err!=nil {
 		return errors.New("消息格式化失败")
 	}
