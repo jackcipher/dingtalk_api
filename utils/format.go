@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"github.com/jackcipher/dingtalk_api/structures"
-	"log"
 	"regexp"
 )
 
@@ -12,7 +11,6 @@ func getMobilesFromContent(content string, atMobiles []string) ([]string, []stri
 	result := r.FindAllStringSubmatch(content, -1)
 	var parsedMobiles []string
 	var extendMobiles []string
-	parsedMobiles = make([]string, len(result))
 	for _, atMobile := range atMobiles {
 		flag := true
 		for _,v := range result {
@@ -35,7 +33,6 @@ func getMobilesFromContent(content string, atMobiles []string) ([]string, []stri
 func FormatMarkDownMessage(title, message string, isAtAll bool, atMobiles []string) *structures.MarkdownMessage {
 	atStr := ""
 	parsedMobiles, extendMobiles := getMobilesFromContent(message, atMobiles)
-	log.Println(parsedMobiles, extendMobiles)
 	if len(extendMobiles) > 0 {
 		for _,v := range extendMobiles {
 			atStr += fmt.Sprintf("@%s", v)
@@ -54,9 +51,9 @@ func FormatMarkDownMessage(title, message string, isAtAll bool, atMobiles []stri
 			Title: title,
 			Text: message,
 		},
-		At:	structures.AtRow{
+		At: structures.AtRow{
 			AtMobiles: atMobiles,
-			IsAtAll: isAtAll,
+			IsAtAll:   isAtAll,
 		},
 	}
 }

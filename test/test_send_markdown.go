@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	dingtalk := dingtalk_api.New("token", "secret")
-	dingtalk.SendMarkdown("test", "hi", []string{"your_phone_number"}, false)
+	dingtalk := dingtalk_api.New("", "")
+	dingtalk.SendMarkdown("unitTest", "", []string{}, false)
 }
