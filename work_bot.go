@@ -7,7 +7,6 @@ import (
 	"github.com/jackcipher/dingtalk_api/structures"
 	"github.com/jackcipher/quickrequest"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -39,7 +38,7 @@ func (p *WorkBotConfig) getWorkNoticeUrl() string {
 	return fmt.Sprintf("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2?access_token=%s", p.AccessToken)
 }
 
-func (p *WorkBotConfig)formatWorkNoticeRequestParams(userIdList []int, title, message string) (error, []byte) {
+func (p *WorkBotConfig)formatWorkNoticeRequestParams(userIdList []string, title, message string) (error, []byte) {
 	if len(userIdList) ==0  {
 		return errors.New("用户ID不能为空"), nil
 	}
@@ -47,13 +46,9 @@ func (p *WorkBotConfig)formatWorkNoticeRequestParams(userIdList []int, title, me
 	if len(message) == 0 {
 		return errors.New("消息数据不能为空"), nil
 	}
-	var strUserIdList []string
-	for _,v := range userIdList {
-		strUserIdList = append(strUserIdList, strconv.Itoa(v))
-	}
 	var config = WorkNoticePersonsParams{
 		AgentId:    p.AgentId,
-		UseridList: strings.Join(strUserIdList, ","),
+		UseridList: strings.Join(userIdList, ","),
 		Msg: structures.NoticeMarkdownMessage{
 			Msgtype:  "markdown",
 			Markdown: structures.MarkdownRow{
@@ -70,7 +65,7 @@ func (p *WorkBotConfig)formatWorkNoticeRequestParams(userIdList []int, title, me
 	return nil, byteJson
 }
 
-func (p *WorkBotConfig) SendWorkNoticeToPersons(userIdList []int, title, message string) error {
+func (p *WorkBotConfig) SendWorkNoticeToPersons(userIdList []string, title, message string) error {
 	err, byteJson := p.formatWorkNoticeRequestParams(userIdList, title, message)
 	if err != nil {
 		return err
