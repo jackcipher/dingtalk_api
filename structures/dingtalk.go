@@ -15,3 +15,13 @@ type MarkdownMessage struct {
 	Markdown MarkdownRow	`json:"markdown"`
 	At AtRow	`json:"at"`
 }
+
+type DingtalkResponse struct {
+	ErrCode int `json:"errcode"`
+	ErrMsg string `json:"errmsg"`
+}
+
+type NoticeMarkdownMessage struct {
+	Msgtype string	`json:"msgtype"`
+	Markdown MarkdownRow	`json:"markdown"`
+}

@@ -7,24 +7,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jackcipher/dingtalk_api/structures"
 	"github.com/jackcipher/dingtalk_api/utils"
 	"github.com/jackcipher/quickrequest"
 	"net/http"
 	"time"
 )
 
-
-
 var currentTimestamp int64
 var webhook string
 var sign string
 
-
-type DingtalkConfig struct {
+type GroupBotConfig struct {
 	Token string
 	Secret string
 }
-
 
 
 func hmacSha256(data string, secret string) string {
@@ -33,20 +30,20 @@ func hmacSha256(data string, secret string) string {
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
-func New(token, secret string) *DingtalkConfig {
-	return &DingtalkConfig{
+func NewGroupBot(token, secret string) *GroupBotConfig {
+	return &GroupBotConfig{
 		Token:  token,
 		Secret: secret,
 	}
 }
 
-func (p *DingtalkConfig)reloadWebhook() {
+func (p *GroupBotConfig)reloadWebhook() {
 	currentTimestamp = time.Now().Unix()*1000
 	sign = utils.UrlEncode(hmacSha256(fmt.Sprintf("%d\n%s", currentTimestamp, p.Secret), p.Secret))
 	webhook = fmt.Sprintf("https://oapi.dingtalk.com/robot/send?access_token=%s&timestamp=%d&sign=%s", p.Token, currentTimestamp, sign)
 }
 
-func (p *DingtalkConfig)SendMarkdown(title, message string, atMobiles []string, isAtAll bool) error {
+func (p *GroupBotConfig)SendMarkdown(title, message string, atMobiles []string, isAtAll bool) error {
 	var jsonByte []byte
 	var err error
 	p.reloadWebhook()
@@ -58,11 +55,7 @@ func (p *DingtalkConfig)SendMarkdown(title, message string, atMobiles []string, 
 	if statusCode != http.StatusOK {
 		return errors.New(fmt.Sprintf("网络错误，状态码:%d", statusCode))
 	}
-	type DingtalkResponse struct {
-		ErrCode int `json:"errcode"`
-		ErrMsg string `json:"errmsg"`
-	}
-	var response = &DingtalkResponse{}
+	var response = &structures.DingtalkResponse{}
 	if err := json.Unmarshal(rawResult, response); err!=nil {
 		return errors.New("JSON解析失败")
 	}
