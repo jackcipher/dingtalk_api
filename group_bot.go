@@ -43,13 +43,25 @@ func (p *GroupBotConfig)reloadWebhook() {
 	webhook = fmt.Sprintf("https://oapi.dingtalk.com/robot/send?access_token=%s&timestamp=%d&sign=%s", p.Token, currentTimestamp, sign)
 }
 
-func (p *GroupBotConfig)SendMarkdown(title, message string, atMobiles []string, isAtAll bool) error {
+func (p *GroupBotConfig)SendMarkdown(title, message string, atMobiles []string, isAtAll bool, btns []structures.DActionCardButton) error {
 	var jsonByte []byte
 	var err error
 	p.reloadWebhook()
-	result := utils.FormatMarkDownMessage(title, message, isAtAll, atMobiles)
-	if jsonByte,err = json.Marshal(result); err!=nil {
-		return errors.New("消息格式化失败")
+	if len(btns) > 0 {
+		params := &structures.DActionCardParams{
+			Title:   title,
+			Message: message,
+			Buttons: btns,
+		}
+		result := params.Format()
+		if jsonByte, err = json.Marshal(result); err != nil {
+			return errors.New("按钮组格式化失败")
+		}
+	} else {
+		result := utils.FormatMarkDownMessage(title, message, isAtAll, atMobiles)
+		if jsonByte,err = json.Marshal(result); err!=nil {
+			return errors.New("消息格式化失败")
+		}
 	}
 	rawResult,statusCode := quickrequest.PostJson(webhook, jsonByte, map[string]string{})
 	if statusCode != http.StatusOK {

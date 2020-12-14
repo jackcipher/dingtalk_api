@@ -18,7 +18,7 @@ type WorkBotConfig struct {
 type WorkNoticePersonsParams struct {
 	AgentId int `json:"agent_id"`
 	UseridList string `json:"userid_list"`
-	Msg structures.NoticeMarkdownMessage `json:"msg"`
+	Msg interface{} `json:"msg"`
 }
 
 type WorkNoticeDeptsParams struct {
@@ -38,7 +38,7 @@ func (p *WorkBotConfig) getWorkNoticeUrl() string {
 	return fmt.Sprintf("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2?access_token=%s", p.AccessToken)
 }
 
-func (p *WorkBotConfig)formatWorkNoticeRequestParams(userIdList []string, title, message string) (error, []byte) {
+func (p *WorkBotConfig)formatWorkNoticeRequestParams(userIdList []string, title, message string, btns []structures.DActionCardForNoticeButton) (error, []byte) {
 	if len(userIdList) ==0  {
 		return errors.New("用户ID不能为空"), nil
 	}
@@ -46,16 +46,32 @@ func (p *WorkBotConfig)formatWorkNoticeRequestParams(userIdList []string, title,
 	if len(message) == 0 {
 		return errors.New("消息数据不能为空"), nil
 	}
-	var config = WorkNoticePersonsParams{
-		AgentId:    p.AgentId,
-		UseridList: strings.Join(userIdList, ","),
-		Msg: structures.NoticeMarkdownMessage{
-			Msgtype:  "markdown",
-			Markdown: structures.MarkdownRow{
-				Title: title,
-				Text: message,
+	strUserIdList := strings.Join(userIdList, ",")
+	var config WorkNoticePersonsParams
+	if len(btns) > 0 {
+		params := structures.DActionCardForNoticeParams {
+			Title:   title,
+			Message: message,
+			Buttons: btns,
+		}
+		actionCard := params.Format()
+		config = WorkNoticePersonsParams{
+			AgentId:    p.AgentId,
+			UseridList: strUserIdList,
+			Msg:        actionCard,
+		}
+	} else {
+		config = WorkNoticePersonsParams{
+			AgentId:    p.AgentId,
+			UseridList: strUserIdList,
+			Msg: structures.NoticeMarkdownMessage{
+				Msgtype:  "markdown",
+				Markdown: structures.MarkdownRow{
+					Title: title,
+					Text: message,
+				},
 			},
-		},
+		}
 	}
 	var err error
 	var byteJson []byte
@@ -65,8 +81,8 @@ func (p *WorkBotConfig)formatWorkNoticeRequestParams(userIdList []string, title,
 	return nil, byteJson
 }
 
-func (p *WorkBotConfig) SendWorkNoticeToPersons(userIdList []string, title, message string) error {
-	err, byteJson := p.formatWorkNoticeRequestParams(userIdList, title, message)
+func (p *WorkBotConfig) SendWorkNoticeToPersons(userIdList []string, title, message string, btns []structures.DActionCardForNoticeButton) error {
+	err, byteJson := p.formatWorkNoticeRequestParams(userIdList, title, message, btns)
 	if err != nil {
 		return err
 	}
